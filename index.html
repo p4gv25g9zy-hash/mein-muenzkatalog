@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#172536">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Münzkatalog">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Mein Münzkatalog</title>
+<style>
+:root{color-scheme:dark;--bg:#101923;--panel:#1b2938;--panel2:#243548;--gold:#dfbd78;--muted:#a8b4c1;--line:#344659;--green:#77d6a2;--red:#ff8d8d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f6f8;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{padding:22px 18px 18px;background:linear-gradient(135deg,#172536,#30445a);border-radius:0 0 24px 24px}
+h1{margin:0;font-size:27px}header p{margin:6px 0 0;color:#c3ced8;font-size:13px}
+main{max-width:760px;margin:auto;padding:16px 14px 40px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.card,.stat{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:15px}
+.stat small,.muted{color:var(--muted)}.stat strong{display:block;font-size:23px;margin:7px 0 2px;overflow-wrap:anywhere}.stat span{font-size:12px;color:var(--muted)}
+.card h2{font-size:16px;margin:0 0 12px}.price{font-size:30px;font-weight:750;color:var(--gold);margin:4px 0 12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.row + .row{margin-top:9px}
+button,.button{border:0;border-radius:12px;padding:12px 14px;background:var(--gold);color:#18212b;font-weight:700;font-size:14px;cursor:pointer}
+button.secondary,.button.secondary{background:var(--panel2);color:#f4f6f8;border:1px solid var(--line)}
+button.danger{background:#542f38;color:#ffd9dc}.actions{display:flex;gap:8px;flex-wrap:wrap}
+input,select,textarea{width:100%;background:#111c27;border:1px solid var(--line);border-radius:10px;color:#fff;padding:12px;font:inherit;margin-top:6px}
+label{display:block;font-size:13px;color:#c6d0da;margin:12px 0 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tabs{display:flex;gap:8px;margin:16px 0}.tabs button{flex:1;background:var(--panel2);color:#e8edf2}.tabs button.active{background:var(--gold);color:#18212b}
+.coin{display:flex;gap:12px;align-items:center;margin-top:10px}.thumb{width:66px;height:66px;object-fit:cover;border-radius:12px;background:#334457;flex-shrink:0}.coin-info{min-width:0;flex:1}.coin-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.coin-info small{display:block;color:var(--muted);margin-top:4px}
+.empty{text-align:center;padding:26px;color:var(--muted)}
+dialog{width:min(680px,calc(100% - 20px));max-height:90vh;overflow:auto;background:var(--panel);color:#fff;border:1px solid var(--line);border-radius:20px;padding:18px}
+dialog::backdrop{background:#000a}.form-actions{display:flex;gap:8px;margin-top:18px}.form-actions button{flex:1}
+.photo-preview{width:100%;height:110px;object-fit:cover;border-radius:10px;background:#111c27;margin-top:7px}
+.note{font-size:12px;color:var(--muted);line-height:1.45}.pill{border:1px solid var(--line);border-radius:30px;padding:4px 9px;font-size:11px;color:var(--gold)}
+hr{border:0;border-top:1px solid var(--line);margin:13px 0}
+@media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}}
+@media print{body{background:#fff;color:#111}header{background:#fff;color:#111;padding:0}header p,.no-print,.tabs,.actions button{display:none!important}main{max-width:none;padding:0}.card,.stat{background:#fff;color:#111;border:1px solid #bbb;break-inside:avoid}.stat small,.stat span,.muted,.coin-info small{color:#444}.price{color:#111}.coin{break-inside:avoid}.thumb{width:45px;height:45px}button{display:none}}
+</style>
+</head>
+<body>
+<header><h1>Mein Münzkatalog</h1><p>Deine Münzen und Medaillen. Sicher auf diesem iPhone gespeichert.</p></header>
+<main>
+  <section class="stats">
+    <div class="stat"><small>Gesamtstücke</small><strong id="pieces">0</strong><span>Stück</span></div>
+    <div class="stat"><small>Gesamtgewicht</small><strong id="weight">0 g</strong><span>Bruttogewicht</span></div>
+    <div class="stat"><small>Feinsilber</small><strong id="fine">0 g</strong><span>Reines Silber</span></div>
+    <div class="stat"><small>Anschaffungskosten</small><strong id="cost">0 €</strong><span>Gesamt bezahlt</span></div>
+  </section>
+  <section class="card">
+    <div class="row"><h2>Aktueller Silber-Materialwert</h2><span class="pill" id="priceState">Kurs nicht geladen</span></div>
+    <div class="price" id="metalValue">0,00 €</div>
+    <div class="row"><span class="muted">Silberpreis je Gramm</span><b id="pricePerGram">–</b></div>
+    <div class="row"><span class="muted">Differenz zum Einkauf</span><b id="difference">0,00 €</b></div>
+    <hr>
+    <label>Silberpreis manuell ändern (€/g)<input id="manualPrice" inputmode="decimal" placeholder="z. B. 1,25"></label>
+    <div class="actions" style="margin-top:10px"><button id="savePrice" class="secondary">Preis übernehmen</button><button id="refreshPrice" class="secondary">Kurs aktualisieren</button></div>
+    <p class="note">Der Materialwert ist eine rechnerische Orientierung, kein garantierter Ankaufs- oder Verkaufspreis. Der automatische Kurs kann ausfallen; du kannst den Preis jederzeit manuell eintragen.</p>
+  </section>
+  <div class="tabs no-print">
+    <button class="active" data-tab="collection">Sammlung</button><button data-tab="exports">Export & Sicherung</button>
+  </div>
+  <section id="collectionView">
+    <div class="row"><h2>Dein Bestand</h2><button id="addCoin">＋ Hinzufügen</button></div>
+    <input id="search" placeholder="Suchen nach Titel, Land, Jahr …">
+    <div id="coinList"></div>
+  </section>
+  <section id="exportsView" hidden>
+    <div class="card">
+      <h2>Sammlung exportieren</h2>
+      <div class="actions"><button id="csvExport">Excel-kompatible CSV</button><button id="pdfExport" class="secondary">PDF erstellen / drucken</button></div>
+      <p class="note">Die CSV-Datei lässt sich in Excel öffnen. Für PDF öffnet sich der iPhone-Druckdialog; dort kannst du die Vorschau mit zwei Fingern vergrößern und über „Teilen“ als PDF sichern.</p>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2>Datensicherung</h2>
+      <div class="actions"><button id="backupExport">Backup herunterladen</button><label class="button secondary" style="margin:0">Backup importieren<input id="backupImport" type="file" accept="application/json" hidden></label></div>
+      <p class="note">Das Backup enthält Einträge und Fotos. Bewahre die Datei zusätzlich an einem sicheren Ort auf. Browserdaten löschen kann lokale Daten entfernen.</p>
+    </div>
+    <div class="card" style="margin-top:12px"><h2>Speicherung</h2><p class="note">Deine Einträge und Fotos werden lokal in diesem Browser auf dem iPhone gespeichert (IndexedDB). Es gibt keine automatische Cloud-Synchronisierung.</p></div>
+  </section>
+</main>
+
+<dialog id="coinDialog">
+<form id="coinForm">
+  <div class="row"><h2 id="formTitle">Münze hinzufügen</h2><button type="button" class="secondary" id="closeDialog">Schließen</button></div>
+  <input type="hidden" id="coinId">
+  <label>Titel / Bezeichnung<input id="title" required placeholder="z. B. Maple Leaf"></label>
+  <div class="grid2">
+    <label>Land<input id="country" placeholder="Kanada"></label>
+    <label>Jahrgang<input id="year" inputmode="numeric" placeholder="2025"></label>
+  </div>
+  <div class="grid2">
+    <label>Art<select id="type"><option>Münze</option><option>Medaille</option></select></label>
+    <label>Menge (Stück)<input id="quantity" type="number" min="1" step="1" value="1" required></label>
+  </div>
+  <div class="grid2">
+    <label>Gewicht pro Stück (g)<input id="weightPerPiece" inputmode="decimal" required placeholder="31,1035"></label>
+    <label>Silberanteil (‰)<select id="purity"><option value="999">999 – 99,9 %</option><option value="925">925 – 92,5 %</option><option value="900">900 – 90 %</option><option value="835">835 – 83,5 %</option><option value="800">800 – 80 %</option><option value="500">500 – 50 %</option><option value="0">0 – kein Silber</option></select></label>
+  </div>
+  <label>Bezahlter Preis pro Stück (€)<input id="paid" inputmode="decimal" placeholder="z. B. 35,00"></label>
+  <label>Notizen<textarea id="notes" rows="2" placeholder="Besonderheiten …"></textarea></label>
+  <div class="grid2">
+    <label>Foto Vorderseite<input id="frontPhoto" type="file" accept="image/*" capture="environment"><img id="frontPreview" class="photo-preview" hidden></label>
+    <label>Foto Rückseite<input id="backPhoto" type="file" accept="image/*" capture="environment"><img id="backPreview" class="photo-preview" hidden></label>
+  </div>
+  <p class="note" id="calculationPreview">Gewicht und Feinsilber werden automatisch berechnet.</p>
+  <div class="form-actions"><button type="submit">Speichern</button><button type="button" class="secondary" id="cancelForm">Abbrechen</button></div>
+</form>
+</dialog>
+<dialog id="detailDialog"><div id="detailContent"></div></dialog>
+<script>
+const DB_NAME='MeinMuenzkatalogDB', STORE='coins';
+let db, coins=[], editingFront=null, editingBack=null, silverPrice=Number(localStorage.getItem('silverPrice')||'1.37');
+const $=id=>document.getElementById(id);
+const n=v=>Number(String(v??'').replace(',','.'))||0;
+const fmt=v=>new Intl.NumberFormat('de-DE',{maximumFractionDigits:2}).format(v);
+const eur=v=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(v);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+function request(mode,fn){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,mode),s=tx.objectStore(STORE);let req=fn(s);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+async function load(){coins=await request('readonly',s=>s.getAll());render()}
+async function put(c){await request('readwrite',s=>s.put(c));await load()}
+async function remove(id){await request('readwrite',s=>s.delete(id));await load()}
+function totals(){return coins.reduce((a,c)=>{a.pieces+=c.quantity;a.weight+=c.quantity*c.weightPerPiece;a.fine+=c.quantity*c.weightPerPiece*c.purity/1000;a.cost+=c.quantity*c.paid;return a},{pieces:0,weight:0,fine:0,cost:0})}
+function render(){
+ const t=totals();$('pieces').textContent=t.pieces;$('weight').textContent=fmt(t.weight)+' g';$('fine').textContent=fmt(t.fine)+' g';$('cost').textContent=eur(t.cost);
+ $('metalValue').textContent=eur(t.fine*silverPrice);$('pricePerGram').textContent=eur(silverPrice)+' / g';
+ const d=t.fine*silverPrice-t.cost;$('difference').textContent=eur(d);$('difference').style.color=d>=0?'var(--green)':'var(--red)';
+ $('manualPrice').value=String(silverPrice).replace('.',',');
+ const q=$('search').value.toLocaleLowerCase('de');const list=coins.filter(c=>[c.title,c.country,c.year,c.type].join(' ').toLocaleLowerCase('de').includes(q)).sort((a,b)=>b.created-a.created);
+ $('coinList').innerHTML=list.length?list.map(c=>`<article class="card coin" data-id="${c.id}">${c.front?`<img class="thumb" src="${c.front}">`:'<div class="thumb" style="display:grid;place-items:center;font-size:26px">◉</div>'}<div class="coin-info"><b>${esc(c.title)}</b><small>${esc(c.country)} · ${esc(c.year)} · ${esc(c.type)} · ${c.quantity} Stk.</small><small>${fmt(c.quantity*c.weightPerPiece)} g · ${fmt(c.quantity*c.weightPerPiece*c.purity/1000)} g Feinsilber</small></div><span class="pill">›</span></article>`).join(''):'<div class="card empty">Noch keine Münzen vorhanden.<br>Tippe auf „Hinzufügen“, um zu starten.</div>';
+ document.querySelectorAll('.coin').forEach(el=>el.addEventListener('click',()=>showDetail(el.dataset.id)));
+ $('priceState').textContent=localStorage.getItem('priceUpdated')?'Kurs: '+localStorage.getItem('priceUpdated'):'Manueller / Startwert';
+}
+function showTab(tab){$('collectionView').hidden=tab!=='collection';$('exportsView').hidden=tab!=='exports';document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$('search').addEventListener('input',render);
+function clearForm(){ $('coinForm').reset();$('coinId').value='';$('quantity').value='1';$('frontPreview').hidden=true;$('backPreview').hidden=true;editingFront=null;editingBack=null;$('formTitle').textContent='Münze hinzufügen';}
+function showForm(c=null){
+ clearForm();
+ if(c){$('formTitle').textContent='Eintrag bearbeiten';$('coinId').value=c.id;['title','country','year','type','quantity','weightPerPiece','purity','paid','notes'].forEach(k=>$(k).value=c[k]??'');editingFront=c.front||null;editingBack=c.back||null;for(const [id,data] of [['frontPreview',editingFront],['backPreview',editingBack]])if(data){$(id).src=data;$(id).hidden=false}}
+ $('coinDialog').showModal();
+}
+$('addCoin').onclick=()=>showForm();$('closeDialog').onclick=$('cancelForm').onclick=()=>$('coinDialog').close();
+function readImage(file){return new Promise((resolve,reject)=>{if(!file)return resolve(null);const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const max=1200,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.82))};img.onerror=reject;img.src=reader.result};reader.onerror=reject;reader.readAsDataURL(file)})}
+for(const [input,preview,side] of [['frontPhoto','frontPreview','front'],['backPhoto','backPreview','back']])$(input).onchange=async e=>{const data=await readImage(e.target.files[0]);if(data){if(side==='front')editingFront=data;else editingBack=data;$(preview).src=data;$(preview).hidden=false}};
+function updatePreview(){const qty=Math.max(0,parseInt($('quantity').value)||0),w=n($('weightPerPiece').value),p=n($('purity').value);$('calculationPreview').textContent=`Gesamtgewicht: ${fmt(qty*w)} g · Feinsilber: ${fmt(qty*w*p/1000)} g · Gesamtkaufpreis: ${eur(qty*n($('paid').value))}`}
+['quantity','weightPerPiece','purity','paid'].forEach(id=>$(id).addEventListener('input',updatePreview));
+$('coinForm').onsubmit=async e=>{e.preventDefault();const id=$('coinId').value||crypto.randomUUID(),old=coins.find(c=>c.id===id);const c={id,title:$('title').value.trim(),country:$('country').value.trim(),year:$('year').value.trim(),type:$('type').value,quantity:Math.max(1,parseInt($('quantity').value)||1),weightPerPiece:n($('weightPerPiece').value),purity:n($('purity').value),paid:n($('paid').value),notes:$('notes').value,front:editingFront,back:editingBack,created:old?.created||Date.now()};if(c.weightPerPiece<=0){alert('Bitte ein gültiges Gewicht eintragen.');return}await put(c);$('coinDialog').close()};
+function showDetail(id){const c=coins.find(x=>x.id===id);if(!c)return;const t=`<div class="row"><h2>${esc(c.title)}</h2><button class="secondary" onclick="detailDialog.close()">Schließen</button></div>${c.front?`<img class="photo-preview" src="${c.front}">`:''}${c.back?`<img class="photo-preview" src="${c.back}">`:''}<p class="muted">${esc(c.country)} · ${esc(c.year)} · ${esc(c.type)}</p><div class="row"><span>Menge</span><b>${c.quantity} Stück</b></div><div class="row"><span>Gesamtgewicht</span><b>${fmt(c.quantity*c.weightPerPiece)} g</b></div><div class="row"><span>Silberanteil</span><b>${c.purity} ‰</b></div><div class="row"><span>Feinsilber</span><b>${fmt(c.quantity*c.weightPerPiece*c.purity/1000)} g</b></div><div class="row"><span>Kaufpreis gesamt</span><b>${eur(c.quantity*c.paid)}</b></div><p>${esc(c.notes)}</p><div class="actions"><button onclick="editCoin('${c.id}')">Bearbeiten</button><button class="danger" onclick="deleteCoin('${c.id}')">Löschen</button></div>`;$('detailContent').innerHTML=t;$('detailDialog').showModal()}
+window.editCoin=id=>{const c=coins.find(x=>x.id===id);$('detailDialog').close();showForm(c)};
+window.deleteCoin=async id=>{if(confirm('Diesen Eintrag wirklich löschen?')){await remove(id);$('detailDialog').close()}};
+$('savePrice').onclick=()=>{const p=n($('manualPrice').value);if(p<=0){alert('Bitte einen Preis größer 0 eingeben.');return}silverPrice=p;localStorage.setItem('silverPrice',String(p));render()};
+$('refreshPrice').onclick=refreshPrice;
+async function refreshPrice(){
+ $('priceState').textContent='Lade Kurs …';
+ try{
+  const [metalRes,fxRes]=await Promise.all([fetch('https://api.gold-api.com/price/XAG'),fetch('https://api.frankfurter.app/latest?from=USD&to=EUR')]);
+  if(!metalRes.ok||!fxRes.ok)throw Error('Kursdienst nicht erreichbar');
+  const metal=await metalRes.json(),fx=await fxRes.json();
+  const usdOz=Number(metal.price),usdToEur=Number(fx.rates.EUR);
+  if(!(usdOz>0&&usdToEur>0))throw Error('Ungültiger Kurs');
+  silverPrice=usdOz*usdToEur/31.1034768;localStorage.setItem('silverPrice',String(silverPrice));
+  const stamp=new Date().toLocaleString('de-DE');localStorage.setItem('priceUpdated',stamp);render();$('priceState').textContent='Aktualisiert: '+stamp;
+ }catch(e){$('priceState').textContent='Kurs nicht abrufbar';alert('Der Silberkurs konnte gerade nicht automatisch geladen werden. Bitte später erneut versuchen oder den Preis manuell eintragen.')}
+}
+function download(name,blob){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
+$('csvExport').onclick=()=>{const headers=['Titel','Land','Jahr','Typ','Menge','Gewicht je Stück (g)','Gesamtgewicht (g)','Silberanteil (‰)','Feinsilber (g)','Kaufpreis je Stück (€)','Gesamtkaufpreis (€)','Materialwert (€)','Notizen'];const rows=coins.map(c=>[c.title,c.country,c.year,c.type,c.quantity,c.weightPerPiece,c.quantity*c.weightPerPiece,c.purity,c.quantity*c.weightPerPiece*c.purity/1000,c.paid,c.quantity*c.paid,c.quantity*c.weightPerPiece*c.purity/1000*silverPrice,c.notes]);const csv='\ufeff'+[headers,...rows].map(r=>r.map(csvCell).join(';')).join('\r\n');download('Mein-Muenzkatalog.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}))};
+$('pdfExport').onclick=()=>window.print();
+$('backupExport').onclick=()=>download('Mein-Muenzkatalog-Backup.json',new Blob([JSON.stringify({version:1,silverPrice,coins},null,2)],{type:'application/json'}));
+$('backupImport').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const obj=JSON.parse(await f.text());if(!Array.isArray(obj.coins))throw Error('Ungültige Backup-Datei');if(!confirm('Backup importieren? Vorhandene gleichnamige IDs werden überschrieben.'))return;for(const c of obj.coins){if(!c.id)c.id=crypto.randomUUID();await put(c)}if(Number(obj.silverPrice)>0){silverPrice=Number(obj.silverPrice);localStorage.setItem('silverPrice',String(silverPrice))}await load();alert('Backup importiert.')}catch(err){alert('Import fehlgeschlagen: '+err.message)}e.target.value=''};
+(async()=>{try{db=await openDB();await load();render()}catch(e){alert('Lokaler Speicher konnte nicht geöffnet werden. Bitte Safari verwenden.')}})();
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
